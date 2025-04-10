@@ -25,15 +25,27 @@
 	</div>
 
 	<div class="form-group">
-		<label for="image">Image</label>
-		<input type="file" name="image" id="image" value="<?= set_value('image'); ?>">
-		<?= form_error('image', '<div style="color: red; margin-top: 0.25rem;">', '</div>'); ?>
+		<label for="image">Image (PNG, JPG, JPEG, GIF max 2MB)</label>
+		<input type="file" name="image" id="image" accept="image/*">
+		<div id="currentImage" style="margin-top: 0.5rem; display: none;">
+			<p>Current image:</p>
+			<img id="currentImageImg" style="max-width: 200px;">
+		</div>
+		<div id="imagePreview" style="margin-top: 0.5rem; display: none; max-width: 200px;">
+			<p>New image preview:</p>
+			<img id="imagePreviewImg" style="max-width: 100%;">
+		</div>
+		<div id="imageError" style="color: red; margin-top: 0.25rem;"></div>
 	</div>
 
 	<div class="form-group">
-		<label for="file">File</label>
-		<input type="file" name="file" id="file" value="<?= set_value('file'); ?>">
-		<?= form_error('file', '<div style="color: red; margin-top: 0.25rem;">', '</div>'); ?>
+		<label for="file">File (PDF only, max 5MB)</label>
+		<input type="file" name="file" id="file" accept=".pdf">
+		<div id="currentFile" style="margin-top: 0.5rem; display: none;">
+			<p>Current file: <a id="currentFileLink" target="_blank">View PDF</a></p>
+		</div>
+		<div id="fileInfo" style="margin-top: 0.5rem; display: none;"></div>
+		<div id="fileError" style="color: red; margin-top: 0.25rem;"></div>
 	</div>
 
 	<button type="submit" class="btn">Update Articles</button>
@@ -47,6 +59,11 @@
 		const titleField = document.getElementById('title');
 		const contentField = document.getElementById('content');
 		const categoryField = document.getElementById('category');
+		const currentImage = document.getElementById('currentImage');
+		const currentImageImg = document.getElementById('currentImageImg');
+		const currentFile = document.getElementById('currentFile');
+		const currentFileLink = document.getElementById('currentFileLink');
+
 		titleField.disabled = true;
 		contentField.disabled = true;
 		categoryField.disabled = true;
@@ -78,10 +95,83 @@
 			});
 	})
 
+	document.getElementById('image').addEventListener('change', function(e) {
+		const file = e.target.files[0];
+		const preview = document.getElementById('imagePreview');
+		const previewImg = document.getElementById('imagePreviewImg');
+		const errorDiv = document.getElementById('imageError');
+
+		errorDiv.textContent = '';
+		preview.style.display = 'none';
+
+		if (file) {
+			const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/jpg'];
+			if (!validTypes.includes(file.type)) {
+				errorDiv.textContent = 'Invalid file type. Please upload a PNG, JPG, JPEG, or GIF file.';
+				e.target.value = '';
+				return;
+			}
+
+			if (file.size > 2 * 1024 * 1024) {
+				errorDiv.textContent = 'File size exceeds 2MB limit.';
+				e.target.value = '';
+				return;
+			}
+
+			const reader = new FileReader();
+			reader.onload = function(e) {
+				previewImg.src = e.target.result;
+				preview.style.display = 'block';
+			}
+			reader.readAsDataURL(file);
+		}
+	});
+
+	document.getElementById('file').addEventListener('change', function(e) {
+		const file = e.target.files[0];
+		const infoDiv = document.getElementById('fileInfo');
+		const errorDiv = document.getElementById('fileError');
+
+		errorDiv.textContent = '';
+		infoDiv.style.display = 'none';
+
+		if (file) {
+			if (file.type !== 'application/pdf') {
+				errorDiv.textContent = 'Invalid file type. Please upload a PDF file.';
+				e.target.value = '';
+				return;
+			}
+
+			if (file.size > 5 * 1024 * 1024) {
+				errorDiv.textContent = 'File size exceeds 5MB limit.';
+				e.target.value = '';
+				return;
+			}
+
+			infoDiv.textContent = `Selected: ${file.name} (${(file.size / 1024).toFixed(2)} KB)`;
+			infoDiv.style.display = 'block';
+		}
+	});
+
 	function populateArticleForm(articleData) {
 		document.getElementById('title').value = articleData.title || '';
 		document.getElementById('content').value = articleData.content || '';
 		document.getElementById('category').value = articleData.category || '';
+
+		if (articleData.image_path) {
+			const currentImage = document.getElementById('currentImage');
+			const currentImageImg = document.getElementById('currentImageImg');
+			currentImageImg.src = '<?= base_url() ?>' + articleData.image_path;
+			currentImage.style.display = 'block';
+		}
+
+		if (articleData.pdf_path) {
+			const currentFile = document.getElementById('currentFile');
+			const currentFileLink = document.getElementById('currentFileLink');
+			currentFileLink.href = '<?= base_url() ?>' + articleData.pdf_path;
+			currentFileLink.textContent = articleData.pdf_path.split('/').pop();
+			currentFile.style.display = 'block';
+		}
 	}
 
 	function logout() {
@@ -106,7 +196,7 @@
 	}
 
 	document.querySelector('form').addEventListener('submit', function(e) {
-		userId = <?= $userId ?>;
+		e.preventDefault();
 
 		let title = document.getElementById('title').value.trim();
 		let content = document.getElementById('content').value.trim();
@@ -163,16 +253,11 @@
 
 		const articleId = <?= $id ?>;
 
+		const formData = new FormData(this);
+
 		fetch(`<?= base_url("api/datas") ?>/${articleId}`, {
-				method: 'PUT',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify({
-					title: title,
-					content: content,
-					category: category
-				}),
+				method: 'POST',
+				body: formData
 			})
 			.then(response => response.json())
 			.then(data => {
@@ -184,8 +269,8 @@
 				}
 			})
 			.catch(error => {
+				console.error('Error:', error);
 				alert('An error occurred while updating the article');
 			});
-		e.preventDefault();
 	})
 </script>

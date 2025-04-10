@@ -25,15 +25,19 @@
 	</div>
 
 	<div class="form-group">
-		<label for="image">Image</label>
-		<input type="file" name="image" id="image" value="<?= set_value('image'); ?>">
-		<?= form_error('image', '<div style="color: red; margin-top: 0.25rem;">', '</div>'); ?>
+		<label for="image">Image (PNG, JPG, JPEG, GIF max 2MB)</label>
+		<input type="file" name="image" id="image" accept="image/*">
+		<div id="imagePreview" style="margin-top: 0.5rem; display: none; max-width: 200px;">
+			<img id="imagePreviewImg" style="max-width: 100%;">
+		</div>
+		<div id="imageError" style="color: red; margin-top: 0.25rem;"></div>
 	</div>
 
 	<div class="form-group">
-		<label for="file">File</label>
-		<input type="file" name="file" id="file" value="<?= set_value('file'); ?>">
-		<?= form_error('file', '<div style="color: red; margin-top: 0.25rem;">', '</div>'); ?>
+		<label for="file">File (PDF only, max 5MB)</label>
+		<input type="file" name="file" id="file" accept=".pdf">
+		<div id="fileInfo" style="margin-top: 0.5rem; display: none;"></div>
+		<div id="fileError" style="color: red; margin-top: 0.25rem;"></div>
 	</div>
 
 	<button type="submit" class="btn">Create Articles</button>
@@ -43,6 +47,65 @@
 </div>
 
 <script>
+	document.getElementById('image').addEventListener('change', function(e) {
+		const file = e.target.files[0];
+		const preview = document.getElementById('imagePreview');
+		const previewImg = document.getElementById('imagePreviewImg');
+		const errorDiv = document.getElementById('imageError');
+
+		errorDiv.textContent = '';
+		preview.style.display = 'none';
+
+		if (file) {
+
+			const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/jpg'];
+			if (!validTypes.includes(file.type)) {
+				errorDiv.textContent = 'Invalid file type. Please upload a PNG, JPG, JPEG, or GIF file.';
+				e.target.value = '';
+				return;
+			}
+
+			if (file.size > 2 * 1024 * 1024) {
+				errorDiv.textContent = 'File size exceeds 2MB limit.';
+				e.target.value = '';
+				return;
+			}
+
+			const reader = new FileReader();
+			reader.onload = function(e) {
+				previewImg.src = e.target.result;
+				preview.style.display = 'block';
+			}
+			reader.readAsDataURL(file);
+		}
+	});
+
+	document.getElementById('file').addEventListener('change', function(e) {
+		const file = e.target.files[0];
+		const infoDiv = document.getElementById('fileInfo');
+		const errorDiv = document.getElementById('fileError');
+
+		errorDiv.textContent = '';
+		infoDiv.style.display = 'none';
+
+		if (file) {
+			if (file.type !== 'application/pdf') {
+				errorDiv.textContent = 'Invalid file type. Please upload a PDF file.';
+				e.target.value = '';
+				return;
+			}
+
+			if (file.size > 5 * 1024 * 1024) {
+				errorDiv.textContent = 'File size exceeds 5MB limit.';
+				e.target.value = '';
+				return;
+			}
+
+			infoDiv.textContent = `Selected: ${file.name} (${(file.size / 1024).toFixed(2)} KB)`;
+			infoDiv.style.display = 'block';
+		}
+	});
+
 	function logout() {
 		var xhr = new XMLHttpRequest();
 		xhr.open('DELETE', '<?= base_url("api/logout") ?>', true);
@@ -116,21 +179,16 @@
 		}
 
 		if (hasError) {
-			e.preventDefault();
 			return false;
 		}
 
+		const formData = new FormData(this);
+		formData.append('userId', userId);
+
+
 		fetch('<?= base_url("api/datas") ?>', {
 				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify({
-					title: title,
-					content: content,
-					category: category,
-					userId: userId
-				}),
+				body: formData
 			})
 			.then(response => response.json())
 			.then(data => {

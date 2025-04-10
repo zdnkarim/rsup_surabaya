@@ -72,5 +72,6 @@ $route['api/users/(:num)']['DELETE'] = 'api/users/delete/$1';
 $route['api/datas']['GET'] = 'api/articles/index';
 $route['api/datas']['POST'] = 'api/articles/store';
 $route['api/datas/(:num)']['GET'] = 'api/articles/show/$1';
-$route['api/datas/(:num)']['PUT'] = 'api/articles/update/$1';
+$route['api/datas/(:num)']['POST'] = 'api/articles/update/$1';
+// $route['api/datas/(:num)']['PUT'] = 'api/articles/update/$1';
 $route['api/datas/(:num)']['DELETE'] = 'api/articles/delete/$1';

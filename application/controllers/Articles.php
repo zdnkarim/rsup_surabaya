@@ -61,6 +61,7 @@ class Articles extends CI_Controller
 	public function update($id)
 	{
 		if (!$this->requireEditor()) return redirect('articles');
+
 		$data['title'] = 'Update Article';
 		$data['username'] = $this->currentUser['username'];
 		$data['role'] = $this->currentUser['role'];

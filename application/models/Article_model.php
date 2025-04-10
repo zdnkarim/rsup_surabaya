@@ -5,7 +5,7 @@ class Article_model extends CI_Model
 {
 	public function get_articles($keyword, $limit = 5, $offset = 0)
 	{
-		$this->db->select('datas.id, title, content, category,users.id as user_id, users.username, datas.created_at');
+		$this->db->select('datas.id, title, content, category,users.id as user_id, users.username, image_path, pdf_path, datas.created_at');
 		$this->db->join('users', 'users.id = datas.user_id');
 		$this->db->where("(title LIKE '%$keyword%' OR category LIKE '%$keyword%')");
 		$this->db->limit($limit, $offset);
