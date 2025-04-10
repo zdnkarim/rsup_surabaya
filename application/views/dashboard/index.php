@@ -18,7 +18,7 @@
 		<?php if ($role == 'user') : ?>
 			<a href="<?= base_url('articles') ?>" class="btn">Article Dashboard</a>
 		<?php else : ?>
-			<a href="<?= base_url('users') ?>" class="btn">Manage Articles</a>
+			<a href="<?= base_url('articles') ?>" class="btn">Manage Articles</a>
 		<?php endif; ?>
 
 	</div>
@@ -27,7 +27,7 @@
 </div>
 
 <script>
-	function logoutUser() {
+	function logout() {
 		var xhr = new XMLHttpRequest();
 		xhr.open('DELETE', '<?= base_url("api/logout") ?>', true);
 		xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');

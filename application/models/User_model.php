@@ -3,7 +3,7 @@ defined('BASEPATH') or exit('No direct script access allowed');
 
 class User_model extends CI_Model
 {
-	public function get_users($keyword, $limit = 10, $offset = 0)
+	public function get_users($keyword, $limit = 5, $offset = 0)
 	{
 		$this->db->select('id, username, role');
 		$this->db->like('username', $keyword);

@@ -43,7 +43,7 @@
 </div>
 
 <script>
-	function logoutUser() {
+	function logout() {
 		var xhr = new XMLHttpRequest();
 		xhr.open('DELETE', '<?= base_url("api/logout") ?>', true);
 		xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
@@ -143,7 +143,7 @@
 				}
 			})
 			.catch(error => {
-				alert('An error occurred: ' + error.message);
+				alert('An error occurred while creating the user');
 			});
 		e.preventDefault();
 	});

@@ -1,38 +1,44 @@
 <div class="card">
-	<?php if ($role == 'editor') : ?>
+	<?php if ($role == 'article') : ?>
 		<h1><?= "$title Dashboard" ?></h1>
 	<?php else : ?>
 		<h1><?= "Manage $title" ?></h1>
 	<?php endif; ?>
 
 	<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-		<?php if ($role == 'admin') : ?>
+		<?php if ($role != 'user') : ?>
 			<div>
-				<a href="<?= base_url('users/create') ?>" class="btn">Create New <?= $title ?></a>
+				<a href="<?= base_url('articles/create') ?>" class="btn">Create New <?= $title ?></a>
 			</div>
 		<?php else: ?>
 			<div></div>
 		<?php endif; ?>
 
 		<div class="search-container" style="display: flex; align-items: center;">
-			<input type="text" id="searchInput" placeholder="Search users..." style="padding: 0.5rem; margin-right: 0.5rem; width: 200px;">
-			<button type="button" id="searchButton" class="btn" onclick="searchUsers()">Search</button>
+			<input type="text" id="searchInput" placeholder="Search articles..." style="padding: 0.5rem; margin-right: 0.5rem; width: 200px;">
+			<button type="button" id="searchButton" class="btn" onclick="searchArticles()">Search</button>
 		</div>
 	</div>
 
 	<table>
 		<thead>
 			<tr>
-				<th>Username</th>
-				<th>Role</th>
-				<?php if ($role == 'admin') : ?>
+				<th>Title</th>
+				<th>Category</th>
+				<th>Author</th>
+				<th>Created At</th>
+				<?php if ($role != 'user') : ?>
 					<th>Actions</th>
 				<?php endif; ?>
 			</tr>
 		</thead>
-		<tbody id="usersTableBody">
+		<tbody id="articlesTableBody">
 			<tr>
-				<td colspan="3" style="text-align: center;">Loading users...</td>
+				<?php if ($role != 'user') : ?>
+					<td colspan="5" style="text-align: center;">Loading articles...</td>
+				<?php else: ?>
+					<td colspan="4" style="text-align: center;">Loading articles...</td>
+				<?php endif; ?>
 			</tr>
 		</tbody>
 
@@ -50,14 +56,14 @@
 	let currentKeyword = '';
 
 	document.addEventListener('DOMContentLoaded', function() {
-		fetchUsers(1, currentKeyword);
+		fetchArticles(1, currentKeyword);
 	});
 
-	function fetchUsers(page = 1, keyword) {
+	function fetchArticles(page = 1, keyword) {
 		currentPage = page;
 
 		var xhr = new XMLHttpRequest();
-		var uri = `<?= base_url("api/users") ?>?page=${page}&limit=${itemsPerPage}&search=${keyword}`;
+		var uri = `<?= base_url("api/articles") ?>?page=${page}&limit=${itemsPerPage}&search=${keyword}`;
 
 		xhr.open('GET', uri, true);
 		xhr.onreadystatechange = function() {
@@ -66,14 +72,14 @@
 					try {
 						var response = JSON.parse(xhr.responseText);
 						if (response.status) {
-							displayUsers(response.data);
+							displayArticles(response.data);
 
 							if (response.pagination) {
 								totalPages = response.pagination.total_pages;
 								renderPagination();
 							}
 						} else {
-							displayError(response.message || 'Failed to fetch users');
+							displayError(response.message || 'Failed to fetch articles');
 						}
 					} catch (e) {
 						displayError('Invalid response from server');
@@ -86,44 +92,55 @@
 		xhr.send();
 	}
 
-	function displayUsers(users) {
-		const tableBody = document.getElementById('usersTableBody');
+	function displayArticles(articles) {
+		const tableBody = document.getElementById('articlesTableBody');
 		tableBody.innerHTML = '';
-
-		if (users.length === 0) {
-			const row = document.createElement('tr');
-			row.innerHTML = '<td colspan="3" style="text-align: center;">No users found.</td>';
-			tableBody.appendChild(row);
-			return;
-		}
 
 		const currentUserId = <?= $this->session->userdata('id') ?>;
 		const currentUserRole = '<?= $this->session->userdata('role') ?>';
 
+		if (articles.length === 0) {
+			const row = document.createElement('tr');
+			if (currentUserRole != 'user') {
+				row.innerHTML = '<td colspan="5" style="text-align: center;">No articles found.</td>';
+			} else {
+				row.innerHTML = '<td colspan="4" style="text-align: center;">No articles found.</td>';
+			}
+			tableBody.appendChild(row);
+			return;
+		}
 
-		users.forEach(function(user) {
+		articles.forEach(function(article) {
 			const row = document.createElement('tr');
 
-			const usernameCell = document.createElement('td');
-			usernameCell.textContent = user.username;
-			row.appendChild(usernameCell);
+			const titleCell = document.createElement('td');
+			titleCell.textContent = article.title;
+			row.appendChild(titleCell);
 
-			const roleCell = document.createElement('td');
-			roleCell.textContent = user.role;
-			row.appendChild(roleCell);
+			const categoryCell = document.createElement('td');
+			categoryCell.textContent = article.category;
+			row.appendChild(categoryCell);
+
+			const authorCell = document.createElement('td');
+			authorCell.textContent = article.username;
+			row.appendChild(authorCell);
+
+			const createdAtCell = document.createElement('td');
+			createdAtCell.textContent = article.created_at;
+			row.appendChild(createdAtCell);
 
 			const actionsCell = document.createElement('td');
 
-			if (currentUserRole == 'admin') {
+			if (currentUserRole != 'user') {
 				const editLink = document.createElement('a');
-				editLink.href = '<?= base_url('users/') ?>' + user.id;
+				editLink.href = '<?= base_url('articles/') ?>' + article.id;
 				editLink.className = 'btn btn-warning';
 				editLink.style.padding = '0.25rem 0.5rem';
 				editLink.style.fontSize = '0.85rem';
 				editLink.textContent = 'Edit';
 				actionsCell.appendChild(editLink);
 
-				if (user.id != currentUserId) {
+				if (article.user_id == currentUserId || currentUserRole == 'admin') {
 					actionsCell.appendChild(document.createTextNode(' '))
 
 					const deleteButton = document.createElement('button');
@@ -133,7 +150,7 @@
 					deleteButton.style.fontSize = '0.85rem';
 					deleteButton.textContent = 'Delete';
 					deleteButton.onclick = function() {
-						deleteUser(user.id, this);
+						deleteArticle(article.id, this);
 					};
 					actionsCell.appendChild(deleteButton);
 				}
@@ -146,7 +163,7 @@
 	}
 
 	function displayError(message) {
-		const tableBody = document.getElementById('usersTableBody');
+		const tableBody = document.getElementById('articlesTableBody');
 		tableBody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: red;">' + message + '</td></tr>';
 	}
 
@@ -164,7 +181,7 @@
 		prevButton.disabled = currentPage === 1;
 		prevButton.onclick = function() {
 			if (currentPage > 1) {
-				fetchUsers(currentPage - 1, currentKeyword);
+				fetchArticles(currentPage - 1, currentKeyword);
 			}
 		};
 		paginationDiv.appendChild(prevButton);
@@ -177,7 +194,7 @@
 			pageButton.textContent = i;
 			pageButton.className = 'btn' + (i === currentPage ? ' active' : '');
 			pageButton.onclick = function() {
-				fetchUsers(i, currentKeyword);
+				fetchArticles(i, currentKeyword);
 			};
 			paginationDiv.appendChild(pageButton);
 		}
@@ -188,13 +205,13 @@
 		nextButton.disabled = currentPage === totalPages;
 		nextButton.onclick = function() {
 			if (currentPage < totalPages) {
-				fetchUsers(currentPage + 1, currentKeyword);
+				fetchArticles(currentPage + 1, currentKeyword);
 			}
 		};
 		paginationDiv.appendChild(nextButton);
 	}
 
-	function searchUsers() {
+	function searchArticles() {
 		const keyword = document.getElementById('searchInput').value.trim();
 		currentKeyword = keyword;
 		currentPage = 1;
@@ -202,25 +219,25 @@
 		const paginationDiv = document.getElementById('pagination');
 		paginationDiv.innerHTML = '';
 
-		fetchUsers(1, currentKeyword);
+		fetchArticles(1, currentKeyword);
 	}
 
-	function deleteUser(userId, element) {
-		if (!confirm('Are you sure you want to delete this user?')) {
+	function deleteArticle(articleId, element) {
+		if (!confirm('Are you sure you want to delete this article?')) {
 			return;
 		}
 
 		var xhr = new XMLHttpRequest();
-		xhr.open('DELETE', '<?= base_url("api/users/") ?>' + userId, true);
+		xhr.open('DELETE', '<?= base_url("api/datas/") ?>' + articleId, true);
 
 		xhr.onreadystatechange = function() {
 			if (xhr.readyState === 4) {
 				try {
 					var response = JSON.parse(xhr.responseText);
 					if (response.status) {
-						fetchUsers(1, currentKeyword);
+						fetchArticles(1, currentKeyword);
 					} else {
-						alert(response.message || 'Failed to delete user');
+						alert(response.message || 'Failed to delete artcile');
 					}
 				} catch (e) {
 					alert('Invalid response from server');
@@ -252,6 +269,3 @@
 		xhr.send();
 	}
 </script>
-</body>
-
-</html>

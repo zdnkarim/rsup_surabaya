@@ -1,14 +1,14 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
 
-class Users extends CI_Controller
+class Articles extends CI_Controller
 {
 	private $currentUser;
 
 	public function __construct()
 	{
 		parent::__construct();
-		$this->load->model('user_model');
+		$this->load->model('article_model');
 	}
 
 	protected function requireLogin()
@@ -31,13 +31,13 @@ class Users extends CI_Controller
 		return true;
 	}
 
-	protected function requireAdmin()
+	protected function requireEditor()
 	{
 		if (!$this->requireLogin()) {
 			return false;
 		}
 
-		if ($this->currentUser['role'] != 'admin') {
+		if ($this->currentUser['role'] == 'user') {
 			$this->output
 				->set_content_type('application/json')
 				->set_status_header(403)
@@ -59,14 +59,14 @@ class Users extends CI_Controller
 		$page = $this->input->get('page') ? (int)$this->input->get('page') : 1;
 		$limit = $this->input->get('limit') ? (int)$this->input->get('limit') : 5;
 		$offset = ($page - 1) * $limit;
-		$result = $this->user_model->get_users($keyword, $limit, $offset);
+		$result = $this->article_model->get_articles($keyword, $limit, $offset);
 
 		$this->output
 			->set_content_type('application/json')
 			->set_status_header(200)
 			->set_output(json_encode([
 				'status' => true,
-				'data' => $result['users'],
+				'data' => $result['articles'],
 				'pagination' => [
 					'total' => $result['total'],
 					'page' => $page,
@@ -78,60 +78,59 @@ class Users extends CI_Controller
 
 	public function store()
 	{
-		if (!$this->requireAdmin()) return;
+		if (!$this->requireEditor()) return;
 
 		$jsonData = json_decode($this->input->raw_input_stream, true);
 
 		$_POST = $jsonData;
 
-		$this->form_validation->set_rules('username', 'Username', 'required|trim|min_length[3]|max_length[20]|is_unique[users.username]');
-		$this->form_validation->set_rules('password', 'Password', 'required|trim|min_length[6]');
-		$this->form_validation->set_rules('confirmPassword', 'Confirm Password', 'required|trim|matches[password]');
-		$this->form_validation->set_rules('role', 'Role', 'required|trim|in_list[admin,editor,user]');
+		$this->form_validation->set_rules('title', 'Title', 'required|trim|min_length[8]|max_length[20]');
+		$this->form_validation->set_rules('content', 'Content', 'required|trim|min_length[20]|max_length[200]');
+		$this->form_validation->set_rules('category', 'Category', 'required|trim|min_length[3]|max_length[20]');
+		$this->form_validation->set_rules('userId', 'User ID', 'required|integer');
 
-		if ($this->form_validation->run() == FALSE) {
+		if ($this->form_validation->run() == false) {
 			$this->output
 				->set_content_type('application/json')
 				->set_status_header(400)
 				->set_output(json_encode([
 					'status' => false,
-					'message' => 'There was a problem with your input.',
-					'errors' => $this->form_validation->error_array()
+					'message' => validation_errors(),
 				]));
 			return;
 		}
 
-		$userData = [
-			'username' => $jsonData['username'],
-			'password' => password_hash($jsonData['password'], PASSWORD_BCRYPT),
-			'role' => $jsonData['role'],
+		$data = [
+			'title' => $jsonData['title'],
+			'content' => $jsonData['content'],
+			'category' => $jsonData['category'],
+			'user_id' => $jsonData['userId']
 		];
 
-
-		$this->user_model->create_user($userData);
+		$this->article_model->create_article($data);
 
 		$this->output
 			->set_content_type('application/json')
 			->set_status_header(201)
 			->set_output(json_encode([
 				'status' => true,
-				'message' => 'User created successfully.',
+				'message' => 'Article created successfully',
 			]));
 	}
 
 	public function show($id)
 	{
-		if (!$this->requireAdmin()) return;
+		if (!$this->requireEditor()) return;
 
-		$user = $this->user_model->get_user_by_id($id);
+		$article = $this->article_model->get_article_by_id($id);
 
-		if ($user) {
+		if ($article) {
 			$this->output
 				->set_content_type('application/json')
 				->set_status_header(200)
 				->set_output(json_encode([
 					'status' => true,
-					'data' => $user,
+					'data' => $article,
 				]));
 		} else {
 			$this->output
@@ -139,74 +138,66 @@ class Users extends CI_Controller
 				->set_status_header(404)
 				->set_output(json_encode([
 					'status' => false,
-					'message' => 'User not found.',
+					'message' => 'Article not found.',
 				]));
 		}
 	}
 
 	public function update($id)
 	{
-		if (!$this->requireAdmin()) return;
+		if (!$this->requireEditor()) return;
 
 		$jsonData = json_decode($this->input->raw_input_stream, true);
 
 		$this->form_validation->set_data($jsonData);
-		$this->form_validation->set_rules('role', 'Role', 'required|trim|in_list[admin,editor,user]');
 
-		$existingUser = $this->user_model->get_user_by_id($id);
-		if ($existingUser['username'] != $jsonData['username']) {
-			$this->form_validation->set_rules('username', 'Username', 'required|trim|min_length[3]|max_length[20]|is_unique[users.username]');
-		}
+		$this->form_validation->set_rules('title', 'Title', 'required|trim|min_length[8]|max_length[20]');
+		$this->form_validation->set_rules('content', 'Content', 'required|trim|min_length[20]|max_length[200]');
+		$this->form_validation->set_rules('category', 'Category', 'required|trim|min_length[3]|max_length[20]');
 
-		if ($jsonData['password'] != null) {
-			$this->form_validation->set_rules('password', 'Password', 'required|trim|min_length[6]');
-			$this->form_validation->set_rules('confirmPassword', 'Confirm Password', 'required|trim|matches[password]');
-		}
-
-		if ($this->form_validation->run() == FALSE) {
+		if ($this->form_validation->run() == false) {
 			$this->output
 				->set_content_type('application/json')
 				->set_status_header(400)
 				->set_output(json_encode([
 					'status' => false,
 					'message' => 'There was a problem with your input.',
-					'errors' => $this->form_validation->error_array()
+					'errors' => validation_errors(),
 				]));
 			return;
 		}
 
-		$userData = [
-			'username' => $jsonData['username'],
-			'role' => $jsonData['role'],
+		$data = [
+			'title' => $jsonData['title'],
+			'content' => $jsonData['content'],
+			'category' => $jsonData['category'],
 		];
-		if ($jsonData['password'] != null) {
-			$userData['password'] = password_hash($jsonData['password'], PASSWORD_BCRYPT);
-		}
 
-		$this->user_model->update_user($id, $userData);
+		$this->article_model->update_article($id, $data);
+
 		$this->output
 			->set_content_type('application/json')
-			->set_status_header(200)
+			->set_status_header(201)
 			->set_output(json_encode([
 				'status' => true,
-				'message' => 'User updated successfully.',
+				'message' => 'Article created successfully',
 			]));
 	}
 
 	public function delete($id)
 	{
-		if (!$this->requireAdmin()) return;
+		if (!$this->requireEditor()) return;
 
-		$user = $this->user_model->get_user_by_id($id);
+		$article = $this->article_model->get_article_by_id($id);
 
-		if ($user) {
-			$this->user_model->delete_user($id);
+		if ($article) {
+			$this->article_model->delete_article($id);
 			$this->output
 				->set_content_type('application/json')
 				->set_status_header(200)
 				->set_output(json_encode([
 					'status' => true,
-					'message' => 'User deleted successfully.',
+					'message' => 'Article deleted successfully.',
 				]));
 		} else {
 			$this->output
@@ -214,7 +205,7 @@ class Users extends CI_Controller
 				->set_status_header(404)
 				->set_output(json_encode([
 					'status' => false,
-					'message' => 'User not found.',
+					'message' => 'Article not found.',
 				]));
 		}
 	}

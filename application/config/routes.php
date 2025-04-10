@@ -54,6 +54,7 @@ $route['404_override'] = '';
 $route['translate_uri_dashes'] = FALSE;
 
 $route['users/(:num)'] = 'users/update/$1';
+$route['articles/(:num)'] = 'articles/update/$1';
 
 $route['api/test'] = 'api/test';
 
@@ -67,3 +68,9 @@ $route['api/users']['POST'] = 'api/users/store';
 $route['api/users/(:num)']['GET'] = 'api/users/show/$1';
 $route['api/users/(:num)']['PUT'] = 'api/users/update/$1';
 $route['api/users/(:num)']['DELETE'] = 'api/users/delete/$1';
+
+$route['api/datas']['GET'] = 'api/articles/index';
+$route['api/datas']['POST'] = 'api/articles/store';
+$route['api/datas/(:num)']['GET'] = 'api/articles/show/$1';
+$route['api/datas/(:num)']['PUT'] = 'api/articles/update/$1';
+$route['api/datas/(:num)']['DELETE'] = 'api/articles/delete/$1';

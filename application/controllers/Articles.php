@@ -1,7 +1,7 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
 
-class Users extends CI_Controller
+class Articles extends CI_Controller
 {
 	private $currentUser;
 
@@ -17,20 +17,16 @@ class Users extends CI_Controller
 			'role' => $this->session->userdata('role'),
 		];
 
-		if ($this->currentUser['role'] == 'user') {
-			return false;
-		}
-
 		return true;
 	}
 
-	protected function requireAdmin()
+	protected function requireEditor()
 	{
 		if (!$this->requireLogin()) {
 			return false;
 		}
 
-		if ($this->currentUser['role'] != 'admin') {
+		if ($this->currentUser['role'] == 'user') {
 			return false;
 		}
 
@@ -41,31 +37,31 @@ class Users extends CI_Controller
 	{
 		if (!$this->requireLogin()) return redirect('login');
 
-		$data['title'] = 'User';
+		$data['title'] = 'Article';
 		$data['username'] = $this->currentUser['username'];
 		$data['role'] = $this->currentUser['role'];
 		$data['userId'] = $this->currentUser['userId'];
 
 		$this->load->view('templates/header', $data);
-		$this->load->view('users/index', $data);
+		$this->load->view('articles/index', $data);
 	}
 
 	public function create()
 	{
-		if (!$this->requireAdmin()) return redirect('users');
-		$data['title'] = 'Create User';
+		if (!$this->requireEditor()) return redirect('articles');
+		$data['title'] = 'Create Articles';
 		$data['username'] = $this->currentUser['username'];
 		$data['role'] = $this->currentUser['role'];
 		$data['userId'] = $this->currentUser['userId'];
 
 		$this->load->view('templates/header', $data);
-		$this->load->view('users/create', $data);
+		$this->load->view('articles/create', $data);
 	}
 
 	public function update($id)
 	{
-		if (!$this->requireAdmin()) return redirect('users');
-		$data['title'] = 'Update User';
+		if (!$this->requireEditor()) return redirect('articles');
+		$data['title'] = 'Update Article';
 		$data['username'] = $this->currentUser['username'];
 		$data['role'] = $this->currentUser['role'];
 		$data['userId'] = $this->currentUser['userId'];
@@ -73,6 +69,6 @@ class Users extends CI_Controller
 		$data['id'] = $id;
 
 		$this->load->view('templates/header', $data);
-		$this->load->view('users/update', $data);
+		$this->load->view('articles/update', $data);
 	}
 }

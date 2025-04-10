@@ -51,29 +51,20 @@
 
 
 		fetch('<?= base_url("api/users/$id") ?>')
-			.then(response => {
-				if (!response.ok) {
-					throw new Error('Failed to load user data. Status: ' + response.status);
-				}
-				return response.json();
-			})
+			.then(response => response.json())
 			.then(data => {
 				if (data.status === true && data.data) {
-
 					populateUserForm(data.data);
 				} else {
-
 					alert(data.message || 'Failed to load user data');
 					window.location.href = '<?= base_url("users") ?>';
 				}
 			})
 			.catch(error => {
-				console.error('Error:', error);
 				alert('Error loading user data: ' + error.message);
 				window.location.href = '<?= base_url("users") ?>';
 			})
 			.finally(() => {
-
 				usernameField.disabled = false;
 				roleField.disabled = false;
 				usernameField.placeholder = "";
@@ -94,7 +85,7 @@
 		}
 	}
 
-	function logoutUser() {
+	function logout() {
 		var xhr = new XMLHttpRequest();
 		xhr.open('DELETE', '<?= base_url("api/logout") ?>', true);
 		xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
@@ -199,7 +190,6 @@
 			return false;
 		}
 
-
 		const userId = <?= $id ?>;
 
 		fetch(`<?= base_url('api/users') ?>/${userId}`, {
@@ -214,20 +204,13 @@
 					role: role
 				})
 			})
-			.then(response => {
-				if (!response.ok) {
-					return response.json().then(data => {
-						throw new Error(data.message || 'Failed to update user');
-					});
-				}
-				return response.json();
-			})
+			.then(response => response.json())
 			.then(data => {
 				if (data.status) {
 					alert('User updated successfully');
 					window.location.href = '<?= base_url('users') ?>';
 				} else {
-					alert(data.message || 'User update failed');
+					alert(data.message || 'Failed to update user');
 				}
 			})
 			.catch(error => {
