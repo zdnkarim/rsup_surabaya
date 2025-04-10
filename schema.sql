@@ -32,3 +32,18 @@ values
 		'user'
 	) --username: user, password: password123
 ;
+
+CREATE TABLE
+	`datas` (
+		`id` int NOT NULL AUTO_INCREMENT,
+		`title` varchar(255) NOT NULL,
+		`content` text NOT NULL,
+		`category` varchar(255) NOT NULL,
+		`user_id` int NOT NULL,
+		`image_path` varchar(255) DEFAULT NULL,
+		`pdf_path` varchar(255) DEFAULT NULL,
+		`created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+		PRIMARY KEY (`id`),
+		KEY `user_id` (`user_id`),
+		CONSTRAINT `datas_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
+	)
