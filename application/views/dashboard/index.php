@@ -15,6 +15,12 @@
 		<?php elseif ($role == 'editor') : ?>
 			<a href="<?= base_url('users') ?>" class="btn">User Dashboard</a>
 		<?php endif; ?>
+		<?php if ($role == 'user') : ?>
+			<a href="<?= base_url('articles') ?>" class="btn">Article Dashboard</a>
+		<?php else : ?>
+			<a href="<?= base_url('users') ?>" class="btn">Manage Articles</a>
+		<?php endif; ?>
+
 	</div>
 </div>
 

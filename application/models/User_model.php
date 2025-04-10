@@ -3,15 +3,24 @@ defined('BASEPATH') or exit('No direct script access allowed');
 
 class User_model extends CI_Model
 {
-	public function get_users($limit = 10, $offset = 0)
+	public function get_users($keyword, $limit = 10, $offset = 0)
 	{
 		$this->db->select('id, username, role');
+		$this->db->like('username', $keyword);
 		$this->db->limit($limit, $offset);
 		$query = $this->db->get('users');
 
 		$this->db->select('COUNT(*) as total');
+		$this->db->like('username', $keyword);
 		$total_query = $this->db->get('users');
 		$total = $total_query->row()->total;
+
+		if ($total == 0) {
+			return [
+				'users' => [],
+				'total' => $total
+			];
+		}
 
 		return [
 			'users' => $query->result_array(),

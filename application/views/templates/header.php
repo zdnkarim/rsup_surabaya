@@ -295,7 +295,8 @@
 					<?php if ($role != 'user') : ?>
 						<li><a href="<?= base_url('users') ?>">Users</a></li>
 					<?php endif; ?>
-					<li><a href="javascript:void(0);" onclick="logoutUser()">Logout (<?= $username ?>)</a></li>
+					<li><a href="<?= base_url('articles') ?>">Articles</a></li>
+					<li><a href="javascript:void(0);" onclick="logout()">Logout (<?= $username ?>)</a></li>
 				</ul>
 			<?php endif; ?>
 		</div>

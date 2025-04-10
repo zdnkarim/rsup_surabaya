@@ -55,36 +55,25 @@ class Users extends CI_Controller
 	{
 		if (!$this->requireLogin()) return;
 
-
+		$keyword = $this->input->get('search') ? $this->input->get('search') : null;
 		$page = $this->input->get('page') ? (int)$this->input->get('page') : 1;
 		$limit = $this->input->get('limit') ? (int)$this->input->get('limit') : 10;
 		$offset = ($page - 1) * $limit;
+		$result = $this->user_model->get_users($keyword, $limit, $offset);
 
-		$result = $this->user_model->get_users($limit, $offset);
-
-		if ($result['users']) {
-			$this->output
-				->set_content_type('application/json')
-				->set_status_header(200)
-				->set_output(json_encode([
-					'status' => true,
-					'data' => $result['users'],
-					'pagination' => [
-						'total' => $result['total'],
-						'page' => $page,
-						'limit' => $limit,
-						'total_pages' => ceil($result['total'] / $limit)
-					]
-				]));
-		} else {
-			$this->output
-				->set_content_type('application/json')
-				->set_status_header(404)
-				->set_output(json_encode([
-					'status' => false,
-					'message' => 'No users found.',
-				]));
-		}
+		$this->output
+			->set_content_type('application/json')
+			->set_status_header(200)
+			->set_output(json_encode([
+				'status' => true,
+				'data' => $result['users'],
+				'pagination' => [
+					'total' => $result['total'],
+					'page' => $page,
+					'limit' => $limit,
+					'total_pages' => ceil($result['total'] / $limit)
+				]
+			]));
 	}
 
 	public function store()

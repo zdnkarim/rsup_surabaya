@@ -1,11 +1,20 @@
 <div class="card">
 	<h1><?= $title ?></h1>
 
-	<?php if ($role == 'admin') : ?>
-		<div style="margin-bottom: 1rem;">
-			<a href="<?= base_url('users/create') ?>" class="btn">Create New User</a>
+	<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+		<?php if ($role == 'admin') : ?>
+			<div>
+				<a href="<?= base_url('users/create') ?>" class="btn">Create New User</a>
+			</div>
+		<?php else: ?>
+			<div></div>
+		<?php endif; ?>
+
+		<div class="search-container" style="display: flex; align-items: center;">
+			<input type="text" id="searchInput" placeholder="Search users..." style="padding: 0.5rem; margin-right: 0.5rem; width: 200px;">
+			<button type="button" id="searchButton" class="btn" onclick="searchUsers()">Search</button>
 		</div>
-	<?php endif; ?>
+	</div>
 
 	<table>
 		<thead>
@@ -34,38 +43,25 @@
 	let currentPage = 1;
 	let totalPages = 1;
 	let itemsPerPage = 5;
+	let currentKeyword = '';
 
-	function logoutUser() {
-		var xhr = new XMLHttpRequest();
-		xhr.open('DELETE', '<?= base_url("api/logout") ?>', true);
-		xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-		xhr.onreadystatechange = function() {
-			if (xhr.readyState === 4) {
-				try {
-					var response = JSON.parse(xhr.responseText);
-					if (response.status) {
-						window.location.href = '<?= base_url() ?>';
-					} else {
-						alert(response.message || 'Logout failed');
-					}
-				} catch (e) {
-					window.location.href = '<?= base_url() ?>';
-				}
-			}
-		};
-		xhr.send();
-	}
+	document.addEventListener('DOMContentLoaded', function() {
+		fetchUsers(1, currentKeyword);
+	});
 
-	function fetchUsers(page = 1) {
+	function fetchUsers(page = 1, keyword) {
 		currentPage = page;
 
 		var xhr = new XMLHttpRequest();
-		xhr.open('GET', `<?= base_url("api/users") ?>?page=${page}&limit=${itemsPerPage}`, true);
+		var uri = `<?= base_url("api/users") ?>?page=${page}&limit=${itemsPerPage}&search=${keyword}`;
+
+		xhr.open('GET', uri, true);
 		xhr.onreadystatechange = function() {
 			if (xhr.readyState === 4) {
 				if (xhr.status === 200) {
 					try {
 						var response = JSON.parse(xhr.responseText);
+						console.log(response);
 						if (response.status) {
 							displayUsers(response.data);
 
@@ -165,7 +161,7 @@
 		prevButton.disabled = currentPage === 1;
 		prevButton.onclick = function() {
 			if (currentPage > 1) {
-				fetchUsers(currentPage - 1);
+				fetchUsers(currentPage - 1, currentKeyword);
 			}
 		};
 		paginationDiv.appendChild(prevButton);
@@ -178,7 +174,7 @@
 			pageButton.textContent = i;
 			pageButton.className = 'btn' + (i === currentPage ? ' active' : '');
 			pageButton.onclick = function() {
-				fetchUsers(i);
+				fetchUsers(i, currentKeyword);
 			};
 			paginationDiv.appendChild(pageButton);
 		}
@@ -189,10 +185,33 @@
 		nextButton.disabled = currentPage === totalPages;
 		nextButton.onclick = function() {
 			if (currentPage < totalPages) {
-				fetchUsers(currentPage + 1);
+				fetchUsers(currentPage + 1, currentKeyword);
 			}
 		};
 		paginationDiv.appendChild(nextButton);
+	}
+
+	function searchUsers() {
+		const keyword = document.getElementById('searchInput').value.trim();
+		currentKeyword = keyword;
+		currentPage = 1;
+
+		const paginationDiv = document.getElementById('pagination');
+		paginationDiv.innerHTML = '';
+
+		fetchUsers(1, currentKeyword);
+	}
+
+	function searchUsers() {
+		const keyword = document.getElementById('searchInput').value.trim();
+		currentKeyword = keyword;
+
+		currentPage = 1;
+
+		const paginationDiv = document.getElementById('pagination');
+		paginationDiv.innerHTML = '';
+
+		fetchUsers(1, currentKeyword);
 	}
 
 	function deleteUser(userId, element) {
@@ -208,7 +227,7 @@
 				try {
 					var response = JSON.parse(xhr.responseText);
 					if (response.status) {
-						fetchUsers(1);
+						fetchUsers(1, currentKeyword);
 					} else {
 						alert(response.message || 'Failed to delete user');
 					}
@@ -221,9 +240,26 @@
 		xhr.send();
 	}
 
-	document.addEventListener('DOMContentLoaded', function() {
-		fetchUsers(1);
-	});
+	function logout() {
+		var xhr = new XMLHttpRequest();
+		xhr.open('DELETE', '<?= base_url("api/logout") ?>', true);
+		xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+		xhr.onreadystatechange = function() {
+			if (xhr.readyState === 4) {
+				try {
+					var response = JSON.parse(xhr.responseText);
+					if (response.status) {
+						window.location.href = '<?= base_url() ?>';
+					} else {
+						alert(response.message || 'Logout failed');
+					}
+				} catch (e) {
+					window.location.href = '<?= base_url() ?>';
+				}
+			}
+		};
+		xhr.send();
+	}
 </script>
 </body>
 
