@@ -148,15 +148,12 @@
 			const recaptchaResponse = grecaptcha.getResponse();
 			let hasError = false;
 
-			// Clear previous error messages
 			document.getElementById('username-error').innerText = '';
 			document.getElementById('password-error').innerText = '';
 			document.getElementById('recaptcha-error').innerText = '';
 
-			// Clear previous alerts
 			document.getElementById('alert-container').innerHTML = '';
 
-			// Validate username
 			if (!username.trim()) {
 				document.getElementById('username-error').innerText = 'Username is required.';
 				hasError = true;
@@ -166,7 +163,6 @@
 				hasError = true;
 			}
 
-			// Validate password
 			if (!password.trim()) {
 				document.getElementById('password-error').innerText = 'Password is required.';
 				hasError = true;
@@ -176,7 +172,6 @@
 				hasError = true;
 			}
 
-			// Validate reCAPTCHA
 			if (!recaptchaResponse) {
 				document.getElementById('recaptcha-error').innerText = 'Please complete the reCAPTCHA.';
 				hasError = true;
@@ -186,7 +181,6 @@
 				return;
 			}
 
-			// Show spinner
 			document.getElementById('login-spinner').style.display = 'block';
 			document.getElementById('login-btn').disabled = true;
 
@@ -217,7 +211,7 @@
 						document.getElementById('alert-container').appendChild(successDiv);
 
 						setTimeout(() => {
-							window.location.href = '<?= base_url('welcome') ?>';
+							window.location.href = '<?= base_url('dashboard') ?>';
 						}, 1000);
 					} else {
 						grecaptcha.reset();

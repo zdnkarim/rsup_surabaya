@@ -117,6 +117,13 @@ defined('BASEPATH') or exit('No direct script access allowed');
 			border-top: 1px solid #D0D0D0;
 			margin-top: 20px;
 		}
+
+		.user-info {
+			font-size: 12px;
+			margin-bottom: 10px;
+			padding: 0 15px;
+			font-style: italic;
+		}
 	</style>
 </head>
 
@@ -124,6 +131,10 @@ defined('BASEPATH') or exit('No direct script access allowed');
 
 	<div id="container">
 		<h1>Welcome to CodeIgniter!</h1>
+
+		<div class="user-info" id="user-greeting">
+			<!-- User information will be displayed here -->
+		</div>
 
 		<div id="body">
 			<p>The page you are looking at is being generated dynamically by CodeIgniter.</p>
@@ -144,6 +155,13 @@ defined('BASEPATH') or exit('No direct script access allowed');
 	</div>
 
 	<script>
+		// Display user information
+		const user = JSON.parse(localStorage.getItem('user') || '{}');
+		const userGreeting = document.getElementById('user-greeting');
+		if (user.username) {
+			userGreeting.textContent = `Logged in as: ${user.username} (${user.role})`;
+		}
+
 		document.getElementById('logoutBtn').addEventListener('click', function() {
 			// Create the DELETE request to the logout API
 			fetch('<?= base_url('api/logout') ?>', {

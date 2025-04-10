@@ -53,4 +53,17 @@ $route['default_controller'] = 'auth';
 $route['404_override'] = '';
 $route['translate_uri_dashes'] = FALSE;
 
+$route['users/(:num)'] = 'users/update/$1';
+
+$route['api/test'] = 'api/test';
+
 $route['login'] = 'auth/login';
+
+$route['api/login'] = 'api/auth/login';
+$route['api/logout'] = 'api/auth/logout';
+
+$route['api/users']['GET'] = 'api/users/index';
+$route['api/users']['POST'] = 'api/users/store';
+$route['api/users/(:num)']['GET'] = 'api/users/show/$1';
+$route['api/users/(:num)']['PUT'] = 'api/users/update/$1';
+$route['api/users/(:num)']['DELETE'] = 'api/users/delete/$1';

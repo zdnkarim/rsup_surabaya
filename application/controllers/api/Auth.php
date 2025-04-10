@@ -1,19 +1,8 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
 
-class Api extends CI_Controller
+class Auth extends CI_Controller
 {
-	public function test()
-	{
-		$this->output
-			->set_content_type('application/json')
-			->set_status_header(200)
-			->set_output(json_encode([
-				'status' => true,
-				'message' => 'API is working.',
-			]));
-	}
-
 	public function login()
 	{
 		$jsonData = json_decode($this->input->raw_input_stream, true);
@@ -27,7 +16,7 @@ class Api extends CI_Controller
 		if ($this->form_validation->run() == FALSE) {
 			$this->output
 				->set_content_type('application/json')
-				->set_status_header(400) // Bad Request
+				->set_status_header(400)
 				->set_output(json_encode([
 					'status' => false,
 					'message' => 'There was a problem with your input.',
@@ -45,7 +34,7 @@ class Api extends CI_Controller
 		if (!$responseData->success) {
 			$this->output
 				->set_content_type('application/json')
-				->set_status_header(400) // Bad Request
+				->set_status_header(400)
 				->set_output(json_encode([
 					'status' => false,
 					'message' => 'reCAPTCHA verification failed.',
@@ -60,7 +49,7 @@ class Api extends CI_Controller
 		if (!$user || !password_verify($jsonData['password'], $user->password)) {
 			$this->output
 				->set_content_type('application/json')
-				->set_status_header(401) // Unauthorized
+				->set_status_header(401)
 				->set_output(json_encode([
 					'status' => false,
 					'message' => 'Invalid username or password.',
@@ -79,7 +68,7 @@ class Api extends CI_Controller
 
 		$this->output
 			->set_content_type('application/json')
-			->set_status_header(200) // OK
+			->set_status_header(200)
 			->set_output(json_encode([
 				'status' => true,
 				'message' => 'Login successful.',
@@ -89,14 +78,14 @@ class Api extends CI_Controller
 
 	public function logout()
 	{
-		// Check if request method is DELETE
+
 		$requestMethod = $_SERVER['REQUEST_METHOD'];
 
 		if ($requestMethod !== 'DELETE') {
-			// Return a 405 Method Not Allowed status code if not DELETE
+
 			$this->output
 				->set_content_type('application/json')
-				->set_status_header(405) // Method Not Allowed
+				->set_status_header(405)
 				->set_header('Allow: DELETE')
 				->set_output(json_encode([
 					'status' => false,
@@ -105,11 +94,11 @@ class Api extends CI_Controller
 			return;
 		}
 
-		// Check if user is actually logged in
+
 		if (!$this->session->userdata('logged_in')) {
 			$this->output
 				->set_content_type('application/json')
-				->set_status_header(401) // Unauthorized
+				->set_status_header(401)
 				->set_output(json_encode([
 					'status' => false,
 					'message' => 'You are not logged in.',
@@ -117,16 +106,16 @@ class Api extends CI_Controller
 			return;
 		}
 
-		// Clear all user session data
+
 		$this->session->unset_userdata('logged_in');
 		$this->session->unset_userdata('id');
 		$this->session->unset_userdata('username');
 		$this->session->unset_userdata('role');
 
-		// Return success response
+
 		$this->output
 			->set_content_type('application/json')
-			->set_status_header(200) // OK
+			->set_status_header(200)
 			->set_output(json_encode([
 				'status' => true,
 				'message' => 'Logout successful.',
